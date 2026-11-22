@@ -10,8 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://docs.codecarbon.io/reference/output/">
+        <link rel="canonical" href="https://docs.codecarbon.io/latest/reference/output/">
       
+      
+        <link rel="describedby" href="../../llms.txt">
+        
+          <link rel="alternate" type="text/markdown" href="./index.md">
+        
       
       
         <link rel="prev" href="../api/">
@@ -24,7 +29,7 @@
       
       
       <link rel="icon" href="../../images/favicon.ico">
-      <meta name="generator" content="zensical-0.0.71">
+      <meta name="generator" content="zensical-0.1.1">
     
     
       
@@ -35,7 +40,7 @@
       
         
       
-      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.e442bf79.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.ebb7f775.min.css">
       
         
           
@@ -53,8 +58,8 @@
       
         
         
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
+        
+        <link href="../../assets/external/fonts.googleapis.com/css.c788a136.css" rel="stylesheet">
         <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
       
     
@@ -70,7 +75,6 @@
   
   
     
-  
   
   
   
@@ -133,9 +137,10 @@
   <img src="../../images/codecarbon-logo.svg" alt="CodeCarbon">
 
     </a>
-    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
+    <label class="md-header__button md-icon" for="__drawer">
       
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+      <span class="md-visually-hidden">Navigation</span>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -187,9 +192,10 @@
     
       
       
-        <label class="md-header__button md-icon" for="__search" aria-label="Search">
+        <label class="md-header__button md-icon" for="__search">
           
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <span class="md-visually-hidden">Search</span>
         </label>
         <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
   <button type="button" class="md-search__button">
@@ -2832,6 +2838,11 @@
                 <a id="__skip" tabindex="-1"></a>
                 
                   
+  <button type="button" title="Copy as Markdown" aria-label="Copy as Markdown" class="md-content__button md-icon" data-md-copy-url="./index.md">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 21H8V7h11m0-2H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2m-3-4H4a2 2 0 0 0-2 2v14h2V3h12z"/></svg>
+  </button>
+
 
   
     <a href="https://github.com/mlco2/codecarbon/edit/master/docs/reference/output.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
@@ -2875,6 +2886,20 @@ See the <a href="https://docs.codecarbon.io/latest/reference/deprecations/">depr
 </div>
 <h2 id="csv">CSV<a class="headerlink" href="#csv" title="Permanent link">&para;</a></h2>
 <p>The package has an in-built logger that logs data into a CSV file named <code>emissions.csv</code> in the <code>output_dir</code>, provided as an input parameter (defaults to the current directory), for each experiment tracked across projects.</p>
+<p>By default that file is written once at the end of the run. To also append a row on the same live cadence as API/Prometheus (<code>api_call_interval × measure_power_secs</code>), set <code>live_output_file</code>:</p>
+<div class="highlight"><pre><span></span><code>from codecarbon import EmissionsTracker
+
+tracker = EmissionsTracker(
+    live_output_file="emissions_live.csv",  # or "auto" / "" → emissions_&lt;run_id&gt;.csv
+)
+</code></pre></div>
+<p>Use the same name as <code>output_file</code> to enable live rows on the primary CSV. Leave <code>live_output_file</code> unset to keep the default final-only behavior.</p>
+<ul>
+<li>Every row holds the <strong>running totals</strong> of the run so far (<code>emissions</code>, <code>energy_consumed</code>, <code>duration</code>...), not the amount for the interval. Take the last row of a <code>run_id</code> for its total, and do not sum rows of the same run.</li>
+<li>A row is also appended at each <code>flush()</code> and at <code>stop()</code>. With <code>api_call_interval=-1</code> there are no live rows, only those, and CodeCarbon logs a warning.</li>
+<li>With <code>"auto"</code>, the file is named after the <code>run_id</code> written in it. When the API output is on, that is the API run id.</li>
+<li>Task CSV files (<code>start_task()</code>/<code>stop_task()</code>) are written only by the CSV output method, not by the interval file.</li>
+</ul>
 <p>The columns are written in the field order of the <code>EmissionsData</code> dataclass
 (<code>codecarbon/output_methods/emissions_data.py</code>).</p>
 <p>The <strong>Provenance</strong> column says where each number comes from: a hardware counter, a model,
@@ -3531,10 +3556,10 @@ the full dict is interpreted as BoAmps metadata.</p>
         
           
         
-      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["content.action.edit","content.action.view","content.code.copy","content.code.select","content.tabs.link","content.tooltips","navigation.instant","navigation.instant.progress","navigation.tracking","navigation.tabs","navigation.tabs.sticky","navigation.sections","navigation.path","navigation.top","navigation.footer","search.highlight"],"redirect":"../../redirect.json","search":"../../assets/javascripts/workers/search.c47bb847.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":{"default":"latest","provider":"mike"}}</script>
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["content.action.copy","content.action.edit","content.action.view","content.code.annotate","content.code.copy","content.code.select","content.footnote.tooltips","content.tabs.link","content.tooltips","navigation.instant","navigation.instant.prefetch","navigation.instant.preview","navigation.instant.progress","navigation.tracking","navigation.tabs","navigation.tabs.sticky","navigation.sections","navigation.path","navigation.top","navigation.footer","search.highlight","toc.follow"],"redirect":"../../redirect.json","search":"../../assets/javascripts/workers/search.719e0d91.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":{"default":"latest","provider":"mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
+      <script src="../../assets/javascripts/bundle.3cb411a8.min.js"></script>
       
         <script src="../../javascripts/mathjax.js"></script>
       
